@@ -1,0 +1,30 @@
+
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+*.txt
+
+bin/
+build/
+dist/
+
+*.log
+/temp/
+
+.DS_Store
+Thumbs.db
+
+
+.idea/        # JetBrains IDE
+.vscode/      # VS Code
+
+
+.env
+
+
+docs/docs.go
