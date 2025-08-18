@@ -20,6 +20,13 @@ import (
 )
 
 func main() {
+	var exitCod int
+	defer func() {
+		if exitCod != 0 {
+			os.Exit(exitCod)
+		}
+	}()
+
 	cfg := config.MustLoad()
 	logg := logger.New(cfg.LoggerLevel)
 
@@ -29,22 +36,34 @@ func main() {
 	}
 	defer pool.Close()
 
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
+	defer signal.Stop(signalChan)
+
+	errCh := make(chan error, 2)
+
 	if err := applyMigrations(logg, cfg.DatabaseURL); err != nil {
 		logg.Error("Database migrations failed", "error", err)
-		os.Exit(1)
+		errCh <- err
 	}
 	mainServer := server.New(logg, cfg, pool)
 
 	go func() {
-		if err := mainServer.Start(); !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("Server crash")
+		if err := mainServer.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logg.Error("Server crash")
+			errCh <- err
 		}
 	}()
 
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
+	var startErr error
 
-	<-signalChan
+	select {
+	case sig := <-signalChan:
+		logg.Info("Shutdown Request", "signal", sig.String())
+	case err := <-errCh:
+		startErr = err
+		logg.Error("Server error", "err", err)
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(cfg.ShuttingDowntime)*time.Second)
 	defer cancel()
@@ -57,6 +76,9 @@ func main() {
 		logg.Info("Server stopped")
 	}
 
+	if startErr != nil {
+		exitCod = 1
+	}
 }
 
 func applyMigrations(logg *slog.Logger, dsn string) error {

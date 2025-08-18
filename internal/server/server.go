@@ -21,7 +21,7 @@ type Server struct {
 func New(logg *slog.Logger, cfg *config.Configuration, db *pgxpool.Pool) *Server {
 	serverEcho := echo.New()
 
-	return &Server{serverEcho, (":" + strconv.Itoa(cfg.Port)), logg, db}
+	return &Server{serverEcho, ":" + strconv.Itoa(cfg.Port), logg, db}
 }
 
 func (server *Server) Start() error {
