@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/Kofandr/To-do_list/config"
 	"github.com/Kofandr/To-do_list/internal/logger"
+	"github.com/Kofandr/To-do_list/internal/repository/postgres"
 	"github.com/Kofandr/To-do_list/internal/server"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pressly/goose/v3"
@@ -43,10 +44,13 @@ func main() {
 	errCh := make(chan error, 2)
 
 	if err := applyMigrations(logg, cfg.DatabaseURL); err != nil {
-		logg.Error("Database migrations failed", "error", err)
+		logg.Error("Database migrations failed", logger.ErrAttr(err))
 		errCh <- err
 	}
-	mainServer := server.New(logg, cfg, pool)
+
+	db := postgres.New(pool)
+
+	mainServer := server.New(logg, cfg, db)
 
 	go func() {
 		if err := mainServer.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -62,7 +66,7 @@ func main() {
 		logg.Info("Shutdown Request", "signal", sig.String())
 	case err := <-errCh:
 		startErr = err
-		logg.Error("Server error", "err", err)
+		logg.Error("Server error", logger.ErrAttr(err))
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(cfg.ShuttingDowntime)*time.Second)
@@ -71,7 +75,7 @@ func main() {
 	logg.Info("Shutting down...")
 
 	if err := mainServer.Shutdown(ctx); err != nil {
-		logg.Error("Shutdown failed", "error", err)
+		logg.Error("Shutdown failed", logger.ErrAttr(err))
 	} else {
 		logg.Info("Server stopped")
 	}

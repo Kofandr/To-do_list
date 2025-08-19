@@ -1,20 +1,26 @@
 package repository
 
+import (
+	"context"
+	"github.com/Kofandr/To-do_list/internal/domain/model"
+)
+
 type Repository interface {
 	ToDoRepository
 	UsersRepository
 }
 
 type ToDoRepository interface {
-	GetTaskUser()
-	CreateTask()
-	UpdateTask()
-	CompleteTask()
-	DeleteTask()
+	GetTask(ctx context.Context, id int) (*model.Task, error)
+	GetTasksUser(ctx context.Context, id int) (*[]model.Task, error)
+	CreateTask(ctx context.Context, task *model.NewTask) (int, error)
+	UpdateTask(ctx context.Context, id int, update *model.NewTask) error
+	CompleteTask(ctx context.Context, id int) error
+	DeleteTask(ctx context.Context, id int) error
 }
 
 type UsersRepository interface {
-	CreateUser()
-	GetUsers()
-	DeleteUser()
+	CreateUser(ctx context.Context, user *model.NewUser) (int, error)
+	GetUsers(ctx context.Context) (*[]model.User, error)
+	DeleteUser(ctx context.Context, id int) error
 }

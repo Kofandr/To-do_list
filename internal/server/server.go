@@ -3,10 +3,9 @@ package server
 import (
 	"context"
 	"github.com/Kofandr/To-do_list/config"
+	"github.com/Kofandr/To-do_list/internal/repository"
 	"log/slog"
 	"strconv"
-
-	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/labstack/echo/v4"
 )
@@ -15,10 +14,10 @@ type Server struct {
 	echo *echo.Echo
 	addr string
 	logg *slog.Logger
-	db   *pgxpool.Pool
+	db   repository.Repository
 }
 
-func New(logg *slog.Logger, cfg *config.Configuration, db *pgxpool.Pool) *Server {
+func New(logg *slog.Logger, cfg *config.Configuration, db repository.Repository) *Server {
 	serverEcho := echo.New()
 
 	return &Server{serverEcho, ":" + strconv.Itoa(cfg.Port), logg, db}

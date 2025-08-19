@@ -2,7 +2,7 @@
 CREATE TABLE users (
                        user_id SERIAL PRIMARY KEY,
                        username VARCHAR(50) NOT NULL UNIQUE,
-                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
 );
 
 CREATE TABLE tasks (
@@ -11,7 +11,7 @@ CREATE TABLE tasks (
                        description TEXT,
                        user_id INT NOT NULL,
                        completed BOOLEAN NOT NULL DEFAULT FALSE,
-                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
 );
 
 CREATE INDEX idx_user_id ON tasks(user_id);
