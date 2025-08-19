@@ -97,5 +97,6 @@ func applyMigrations(logg *slog.Logger, dsn string) error {
 	}
 
 	logg.Info("Database migrations applied successfully")
+
 	return nil
 }

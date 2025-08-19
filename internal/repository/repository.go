@@ -23,4 +23,5 @@ type UsersRepository interface {
 	CreateUser(ctx context.Context, user *model.NewUser) (int, error)
 	GetUsers(ctx context.Context) (*[]model.User, error)
 	DeleteUser(ctx context.Context, id int) error
+	UserExists(ctx context.Context, id int) (bool, error)
 }

@@ -29,7 +29,6 @@ func (postgres *PgxRepository) CreateUser(ctx context.Context, user *model.NewUs
 	}
 
 	return id, err
-
 }
 
 func (postgres *PgxRepository) GetUsers(ctx context.Context) (*[]model.User, error) {
@@ -80,4 +79,14 @@ func (postgres *PgxRepository) DeleteUser(ctx context.Context, id int) error {
 	}
 
 	return nil
+}
+
+func (postgres *PgxRepository) UserExists(ctx context.Context, id int) (bool, error) {
+	const query = `SELECT EXISTS(SELECT 1 FROM users  WHERE user_id = $1)`
+
+	var exists bool
+
+	err := postgres.db.QueryRow(ctx, query, id).Scan(&exists)
+
+	return exists, err
 }
