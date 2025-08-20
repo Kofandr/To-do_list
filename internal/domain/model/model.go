@@ -1,7 +1,7 @@
 package model
 
 type NewUser struct {
-	Name string
+	Name string `json:"name" validate:"required,min=1"`
 }
 
 type User struct {
