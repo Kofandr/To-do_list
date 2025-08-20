@@ -21,3 +21,7 @@ func New(level string) *slog.Logger {
 
 	return slog.New(slog.NewJSONHandler(os.Stdout, opts))
 }
+
+func ErrAttr(err error) slog.Attr {
+	return slog.Any("err", err)
+}
