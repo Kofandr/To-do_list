@@ -3,6 +3,8 @@ package server
 import (
 	"context"
 	"github.com/Kofandr/To-do_list/config"
+	"github.com/Kofandr/To-do_list/internal/handler"
+	"github.com/Kofandr/To-do_list/internal/middleware"
 	"github.com/Kofandr/To-do_list/internal/repository"
 	"log/slog"
 	"strconv"
@@ -19,6 +21,12 @@ type Server struct {
 
 func New(logg *slog.Logger, cfg *config.Configuration, db repository.Repository) *Server {
 	serverEcho := echo.New()
+
+	serverEcho.Use(middleware.RequestLogger(logg))
+
+	handler := handler.New(db)
+
+	serverEcho.POST("/users", handler.CreateUser)
 
 	return &Server{serverEcho, ":" + strconv.Itoa(cfg.Port), logg, db}
 }
