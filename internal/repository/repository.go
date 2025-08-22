@@ -13,8 +13,8 @@ type Repository interface {
 type ToDoRepository interface {
 	GetTask(ctx context.Context, id int) (*model.Task, error)
 	GetTasksUser(ctx context.Context, id int) (*[]model.Task, error)
-	CreateTask(ctx context.Context, task *model.NewTask) (int, error)
-	UpdateTask(ctx context.Context, id int, update *model.NewTask) error
+	CreateTask(ctx context.Context, task *model.RequestTask) (int, error)
+	UpdateTask(ctx context.Context, id int, update *model.RequestTask) error
 	CompleteTask(ctx context.Context, id int) error
 	DeleteTask(ctx context.Context, id int) error
 }
