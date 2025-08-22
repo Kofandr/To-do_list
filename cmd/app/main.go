@@ -18,6 +18,8 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	_ "github.com/jackc/pgx/v5/stdlib" // Добавьте этот импорт
 )
 
 func main() {
@@ -69,7 +71,7 @@ func main() {
 		logg.Error("Server error", logger.ErrAttr(err))
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(cfg.ShuttingDowntime)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	logg.Info("Shutting down...")

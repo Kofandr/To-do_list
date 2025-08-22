@@ -1,12 +1,12 @@
 package model
 
 type NewUser struct {
-	Name string `json:"name" validate:"required,min=1"`
+	Username string `json:"username" validate:"required,min=1"`
 }
 
 type User struct {
-	Name string
-	ID   int
+	Username string `json:"username" validate:"required,min=1"`
+	UserID   int    `json:"user_id" validate:"required,min=1"`
 }
 type NewTask struct {
 	Title       string

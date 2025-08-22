@@ -11,13 +11,13 @@ import (
 	"net/http"
 )
 
-func (handler *Handler) CreateUser(c echo.Context) error {
+func (handler *Handler) CreateTask(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	logg := appctx.LoggerFromContext(ctx)
 
-	var user model.NewUser
-	if err := c.Bind(&user); err != nil {
+	var task model.NewTask
+	if err := c.Bind(&task); err != nil {
 		errResp := map[string]string{"err": "Invalid JSON format"}
 
 		logg.Error("Invalid JSON received", logger.ErrAttr(err))
@@ -25,7 +25,7 @@ func (handler *Handler) CreateUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, errResp)
 	}
 
-	if err := c.Validate(user); err != nil {
+	if err := c.Validate(task); err != nil {
 		errResp := map[string]string{"err": "Invalid request data"}
 
 		logg.Error("Validation failed", logger.ErrAttr(err))
@@ -33,12 +33,29 @@ func (handler *Handler) CreateUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, errResp)
 	}
 
-	id, err := handler.db.CreateUser(ctx, &user)
+	Exist, err := handler.db.UserExists(ctx, task.UserID)
+	if err != nil {
+		errResp := map[string]string{"err": "Server error"}
+
+		logg.Error("An error occurred while accessing the database", logger.ErrAttr(err))
+
+		return c.JSON(http.StatusInternalServerError, errResp)
+	}
+
+	if !Exist {
+		errResp := map[string]string{"err": "Not found User"}
+
+		logg.Error("Not found User", logger.ErrAttr(err))
+
+		return c.JSON(http.StatusNotFound, errResp)
+	}
+
+	id, err := handler.db.CreateTask(ctx, &task)
 	if err != nil {
 		if errors.Is(err, postgres.ErrDuplicate) {
-			errResp := map[string]string{"err": fmt.Sprintf("User with Username '%s' already exists", user.Username)}
+			errResp := map[string]string{"err": fmt.Sprintf("Task with name '%s' already exists", task.Title)}
 
-			logg.Warn("Duplicate user attempt", "Username", user.Username, logger.ErrAttr(err))
+			logg.Warn("Duplicate task attempt", "name", task.Title, logger.ErrAttr(err))
 
 			return c.JSON(http.StatusConflict, errResp)
 		}
@@ -51,23 +68,6 @@ func (handler *Handler) CreateUser(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, map[string]interface{}{
-		"ID user": id,
+		"ID task": id,
 	})
-}
-
-func (handler *Handler) GetUsers(c echo.Context) error {
-	ctx := c.Request().Context()
-
-	logg := appctx.LoggerFromContext(ctx)
-
-	users, err := handler.db.GetUsers(ctx)
-	if err != nil {
-		errResp := map[string]string{"err": "Server error"}
-
-		logg.Error("An error occurred while accessing the database", logger.ErrAttr(err))
-
-		return c.JSON(http.StatusInternalServerError, errResp)
-	}
-
-	return c.JSON(http.StatusOK, users)
 }

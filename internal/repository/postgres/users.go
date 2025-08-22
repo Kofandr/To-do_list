@@ -18,11 +18,11 @@ func (postgres *PgxRepository) CreateUser(ctx context.Context, user *model.NewUs
 
 	var id int
 
-	err := postgres.db.QueryRow(ctx, query, user.Name).Scan(&id)
+	err := postgres.db.QueryRow(ctx, query, user.Username).Scan(&id)
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
 		if pgErr.Code == "23505" {
-			return id, fmt.Errorf("%w: user '%s' already exists", ErrDuplicate, user.Name)
+			return id, fmt.Errorf("%w: user '%s' already exists", ErrDuplicate, user.Username)
 		}
 
 		return id, fmt.Errorf("failed to create user: %w", err)
@@ -33,7 +33,7 @@ func (postgres *PgxRepository) CreateUser(ctx context.Context, user *model.NewUs
 
 func (postgres *PgxRepository) GetUsers(ctx context.Context) (*[]model.User, error) {
 	const query = ` 
-		SELECT name, user_id 
+		SELECT username, user_id 
 		FROM users
 	`
 
@@ -48,7 +48,7 @@ func (postgres *PgxRepository) GetUsers(ctx context.Context) (*[]model.User, err
 	for rows.Next() {
 		var c model.User
 
-		if err := rows.Scan(&c.ID, &c.Name); err != nil {
+		if err := rows.Scan(&c.Username, &c.UserID); err != nil {
 			return nil, err
 		}
 

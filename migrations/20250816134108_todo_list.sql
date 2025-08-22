@@ -1,7 +1,7 @@
 -- +goose Up
 CREATE TABLE users (
                        user_id SERIAL PRIMARY KEY,
-                       username VARCHAR(50) NOT NULL UNIQUE,
+                       username VARCHAR(50) NOT NULL UNIQUE
 
 );
 
@@ -10,7 +10,7 @@ CREATE TABLE tasks (
                        title VARCHAR(255) NOT NULL,
                        description TEXT,
                        user_id INT NOT NULL,
-                       completed BOOLEAN NOT NULL DEFAULT FALSE,
+                       completed BOOLEAN NOT NULL DEFAULT FALSE
 
 );
 
