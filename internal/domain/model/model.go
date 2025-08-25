@@ -2,6 +2,7 @@ package model
 
 type NewUser struct {
 	Username string `json:"username" validate:"required,min=1"`
+	Password string `json:"password" validate:"required,min=8"`
 }
 
 type User struct {
