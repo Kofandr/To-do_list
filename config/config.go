@@ -13,6 +13,7 @@ type Configuration struct {
 	LoggerLevel      string `env:"LOGGER_LEVEL"       envdefault:"INFO"   validate:"required,oneof=DEBUG INFO WARN ERROR"`
 	DatabaseURL      string `env:"DATABASE_URL"       validate:"required"`
 	ShuttingDowntime int    `env:"SHUTTING_DOWN_TIME" envdefault:"5"      validate:"required,min=5,max=600"`
+	JWTSecret        string `env:"JWT_SECRET"       validate:"required"`
 }
 
 func Load() (*Configuration, error) {

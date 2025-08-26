@@ -21,10 +21,10 @@ type Server struct {
 	echo *echo.Echo
 	addr string
 	logg *slog.Logger
-	db   repository.Repository
+	db   *repository.Repository
 }
 
-func New(logg *slog.Logger, cfg *config.Configuration, db repository.Repository) *Server {
+func New(logg *slog.Logger, cfg *config.Configuration, db *repository.Repository) *Server {
 	serverEcho := echo.New()
 
 	serverEcho.Use(middleware.RequestLogger(logg))

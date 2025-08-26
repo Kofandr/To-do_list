@@ -90,3 +90,16 @@ func (postgres *PgxRepository) UserExists(ctx context.Context, id int) (bool, er
 
 	return exists, err
 }
+
+func (postgres *PgxRepository) GetUsersByName(ctx context.Context, username string) (*model.User, error) {
+	const query = `
+		SELECT user_id, username, password  
+		FROM users 
+		WHERE username = $1
+		`
+
+	var user model.User
+	err := postgres.db.QueryRow(ctx, query, username).Scan(user.UserID, user.Username, user.Password)
+
+	return &user, err
+}

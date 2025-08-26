@@ -24,4 +24,5 @@ type UsersRepository interface {
 	GetUsers(ctx context.Context) (*[]model.User, error)
 	DeleteUser(ctx context.Context, id int) error
 	UserExists(ctx context.Context, id int) (bool, error)
+	GetUsersByName(ctx context.Context, username string) (*model.User, error)
 }

@@ -6,8 +6,9 @@ type NewUser struct {
 }
 
 type User struct {
-	Username string `json:"username" validate:"required,min=1"`
-	UserID   int    `json:"user_id" validate:"required,min=1"`
+	UserID   int    `json:"user_id"`
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 type RequestTask struct {
 	Title       string `json:"title" validate:"required,min=1"`
@@ -21,4 +22,9 @@ type Task struct {
 	Description string `json:"description"`
 	UserID      int    `json:"user_id"`
 	Completed   bool   `json:"completed"`
+}
+
+type Tokens struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
 }
