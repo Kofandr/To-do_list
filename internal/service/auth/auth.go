@@ -13,10 +13,10 @@ import (
 
 type Service struct {
 	db  repository.Repository
-	cfg config.Configuration
+	cfg *config.Configuration
 }
 
-func New(db repository.Repository, cfg config.Configuration) *Service {
+func New(db repository.Repository, cfg *config.Configuration) *Service {
 	return &Service{db: db, cfg: cfg}
 }
 

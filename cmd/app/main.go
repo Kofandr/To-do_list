@@ -4,11 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"flag"
 	"fmt"
 	"github.com/Kofandr/To-do_list/config"
 	"github.com/Kofandr/To-do_list/internal/logger"
 	"github.com/Kofandr/To-do_list/internal/repository/postgres"
 	"github.com/Kofandr/To-do_list/internal/server"
+	"github.com/Kofandr/To-do_list/internal/service/auth"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pressly/goose/v3"
 	"log"
@@ -45,14 +47,22 @@ func main() {
 
 	errCh := make(chan error, 2)
 
-	if err := applyMigrations(logg, cfg.DatabaseURL); err != nil {
-		logg.Error("Database migrations failed", logger.ErrAttr(err))
-		errCh <- err
+	migrate := flag.Bool("migrate", false, "apply database migrations")
+	flag.Parse()
+
+	if *migrate {
+		logg.Info("Migrations run")
+		if err := applyMigrations(logg, cfg.DatabaseURL); err != nil {
+			logg.Error("Database migrations failed", logger.ErrAttr(err))
+			errCh <- err
+		}
 	}
 
 	db := postgres.New(pool)
 
-	mainServer := server.New(logg, cfg, db)
+	service := auth.New(db, cfg)
+
+	mainServer := server.New(logg, cfg, db, service)
 
 	go func() {
 		if err := mainServer.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {

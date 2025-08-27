@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/joho/godotenv"
 	"log"
 
 	"github.com/caarlos0/env/v8"
@@ -18,6 +19,8 @@ type Configuration struct {
 
 func Load() (*Configuration, error) {
 	cfg := &Configuration{}
+
+	godotenv.Load()
 
 	if err := env.Parse(cfg); err != nil {
 		return nil, fmt.Errorf("failed to parse environment variables: %w", err)

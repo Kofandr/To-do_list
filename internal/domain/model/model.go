@@ -25,6 +25,6 @@ type Task struct {
 }
 
 type Tokens struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
+	AccessToken  string `json:"access_token" validate:"required,min=1"`
+	RefreshToken string `json:"refresh_token" validate:"required,min=1"`
 }

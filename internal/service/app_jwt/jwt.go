@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func GenerateTokens(user *model.User, cfg config.Configuration) (*model.Tokens, error) {
+func GenerateTokens(user *model.User, cfg *config.Configuration) (*model.Tokens, error) {
 	accessClaims := jwt.MapClaims{
 		"user_id":  user.UserID,
 		"username": user.Username,

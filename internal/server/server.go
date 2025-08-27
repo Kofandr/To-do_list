@@ -9,6 +9,7 @@ import (
 	"github.com/Kofandr/To-do_list/internal/logger"
 	"github.com/Kofandr/To-do_list/internal/middleware"
 	"github.com/Kofandr/To-do_list/internal/repository"
+	"github.com/Kofandr/To-do_list/internal/service/auth"
 	"github.com/go-playground/validator/v10"
 	"log/slog"
 	"net/http"
@@ -18,25 +19,30 @@ import (
 )
 
 type Server struct {
-	echo *echo.Echo
-	addr string
-	logg *slog.Logger
-	db   *repository.Repository
+	echo    *echo.Echo
+	addr    string
+	logg    *slog.Logger
+	db      repository.Repository
+	service *auth.Service
 }
 
-func New(logg *slog.Logger, cfg *config.Configuration, db *repository.Repository) *Server {
+func New(logg *slog.Logger, cfg *config.Configuration, db repository.Repository, service *auth.Service) *Server {
 	serverEcho := echo.New()
 
 	serverEcho.Use(middleware.RequestLogger(logg))
 
 	serverEcho.Validator = &appvalidator.CustomValidator{Validator: validator.New()}
 
-	handler := handler.New(db)
+	handler := handler.New(db, service)
 
 	serverEcho.GET("/users", handler.GetUsers)
 	serverEcho.POST("/users", handler.CreateUser)
 
-	return &Server{serverEcho, ":" + strconv.Itoa(cfg.Port), logg, db}
+	serverEcho.POST("/register", handler.RegisterUsers)
+	serverEcho.POST("/login", handler.LoginUsers)
+	serverEcho.POST("/refresh", handler.RefreshUsers)
+
+	return &Server{serverEcho, ":" + strconv.Itoa(cfg.Port), logg, db, service}
 }
 
 func (server *Server) Start() error {
