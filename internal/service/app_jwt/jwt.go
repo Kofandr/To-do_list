@@ -11,11 +11,13 @@ func GenerateTokens(user *model.User, cfg *config.Configuration) (*model.Tokens,
 	accessClaims := jwt.MapClaims{
 		"user_id":  user.UserID,
 		"username": user.Username,
+		"type":     "access",
 		"exp":      time.Now().Add(15 * time.Minute).Unix(),
 	}
 	refreshClaims := jwt.MapClaims{
 		"user_id":  user.UserID,
 		"username": user.Username,
+		"type":     "refresh",
 		"exp":      time.Now().Add(7 * 24 * time.Hour).Unix(),
 	}
 

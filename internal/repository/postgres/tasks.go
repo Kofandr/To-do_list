@@ -40,7 +40,12 @@ func (postgres *PgxRepository) GetTasksUser(ctx context.Context, id int) (*[]mod
 	for rows.Next() {
 		var task model.Task
 
-		if err := rows.Scan(); err != nil {
+		if err := rows.Scan(&task.ID,
+			&task.Title,
+			&task.Description,
+			&task.UserID,
+			&task.Completed,
+		); err != nil {
 			return nil, fmt.Errorf("scan error: %w", err)
 		}
 
@@ -56,7 +61,7 @@ func (postgres *PgxRepository) GetTasksUser(ctx context.Context, id int) (*[]mod
 
 func (postgres *PgxRepository) CreateTask(ctx context.Context, task *model.RequestTask) (int, error) {
 	const query = ` 
-		INSERT INTO  (title, description, user_id) 
+		INSERT INTO tasks (title, description, user_id) 
 		VALUES ($1, $2, $3) 
 		RETURNING id
 	`

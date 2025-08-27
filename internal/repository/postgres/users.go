@@ -11,14 +11,14 @@ import (
 
 func (postgres *PgxRepository) CreateUser(ctx context.Context, user *model.NewUser) (int, error) {
 	const query = ` 
-		INSERT INTO users (username) 
-		VALUES ($1) 
+		INSERT INTO users (username, password) 
+		VALUES ($1, $2)
 		RETURNING user_id
 	`
 
 	var id int
 
-	err := postgres.db.QueryRow(ctx, query, user.Username).Scan(&id)
+	err := postgres.db.QueryRow(ctx, query, user.Username, user.Password).Scan(&id)
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
 		if pgErr.Code == "23505" {
@@ -99,7 +99,7 @@ func (postgres *PgxRepository) GetUsersByName(ctx context.Context, username stri
 		`
 
 	var user model.User
-	err := postgres.db.QueryRow(ctx, query, username).Scan(user.UserID, user.Username, user.Password)
+	err := postgres.db.QueryRow(ctx, query, username).Scan(&user.UserID, &user.Username, &user.Password)
 
 	return &user, err
 }

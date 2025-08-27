@@ -35,12 +35,18 @@ func New(logg *slog.Logger, cfg *config.Configuration, db repository.Repository,
 
 	handler := handler.New(db, service)
 
-	serverEcho.GET("/users", handler.GetUsers)
-	serverEcho.POST("/users", handler.CreateUser)
-
 	serverEcho.POST("/register", handler.RegisterUsers)
 	serverEcho.POST("/login", handler.LoginUsers)
 	serverEcho.POST("/refresh", handler.RefreshUsers)
+
+	protected := serverEcho.Group("")
+	protected.Use(middleware.JWTAuth(cfg))
+
+	protected.POST("/tasks", handler.CreateTask)
+	protected.GET("/user/tasks/:id", handler.GetTasksUser)
+	protected.POST("/tasks/:id", handler.UpdateTask)
+	protected.GET("/tasks/:id", handler.CompleteTask)
+	protected.DELETE("/tasks/:id", handler.DeleteTask)
 
 	return &Server{serverEcho, ":" + strconv.Itoa(cfg.Port), logg, db, service}
 }
