@@ -175,3 +175,36 @@ func (handler *Handler) RefreshUsers(c echo.Context) error {
 
 	return c.JSON(http.StatusCreated, tokens)
 }
+func (handler *Handler) BindTelegram(c echo.Context) error {
+	ctx := c.Request().Context()
+	logg := appctx.LoggerFromContext(ctx)
+
+	var bindRequest struct {
+		ChatID int64  `json:"chat_id"`
+		Code   string `json:"code"`
+	}
+
+	if err := c.Bind(&bindRequest); err != nil {
+		errResp := map[string]string{"err": "Invalid JSON format"}
+		logg.Error("Invalid JSON received", logger.ErrAttr(err))
+		return c.JSON(http.StatusBadRequest, errResp)
+	}
+
+	// Здесь реализуйте логику проверки кода и привязки Telegram
+	// Это может включать проверку кода, сохранение chat_id в базе данных и т.д.
+
+	// Примерная реализация:
+	userID, err := handler.db.GetUserIDByTelegramCode(bindRequest.Code)
+	if err != nil {
+		logg.Error("Invalid telegram code", logger.ErrAttr(err))
+		return c.JSON(http.StatusBadRequest, map[string]string{"err": "Invalid code"})
+	}
+
+	err = handler.db.UpdateUserTelegramChatID(userID, bindRequest.ChatID)
+	if err != nil {
+		logg.Error("Failed to update telegram chat ID", logger.ErrAttr(err))
+		return c.JSON(http.StatusInternalServerError, map[string]string{"err": "Server error"})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{"message": "Telegram account linked successfully"})
+}

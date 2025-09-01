@@ -25,4 +25,9 @@ type UsersRepository interface {
 	DeleteUser(ctx context.Context, id int) error
 	UserExists(ctx context.Context, id int) (bool, error)
 	GetUsersByName(ctx context.Context, username string) (*model.User, error)
+	CreateTwoFACode(ctx context.Context, code *model.TwoFACode) error
+	GetTwoFACode(ctx context.Context, userID int, forLogin bool) (*model.TwoFACode, error)
+	DeleteTwoFACode(ctx context.Context, userID int, forLogin bool) error
+	UpdateTelegramConfirmed(ctx context.Context, userID int, confirmed bool) error
+	GetUserByTelegramUsername(ctx context.Context, tgUsername string) (*model.User, error) //
 }
