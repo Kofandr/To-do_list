@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"flag"
 	"fmt"
 	"github.com/Kofandr/To-do_list/config"
 	"github.com/Kofandr/To-do_list/internal/logger"
@@ -47,10 +46,7 @@ func main() {
 
 	errCh := make(chan error, 2)
 
-	migrate := flag.Bool("migrate", false, "apply database migrations")
-	flag.Parse()
-
-	if *migrate {
+	if cfg.MigrationRun == true {
 		logg.Info("Migrations run")
 		if err := applyMigrations(logg, cfg.DatabaseURL); err != nil {
 			logg.Error("Database migrations failed", logger.ErrAttr(err))
@@ -104,7 +100,7 @@ func applyMigrations(logg *slog.Logger, dsn string) error {
 	}
 	defer db.Close()
 
-	if err := goose.Up(db, "./migrations"); err != nil {
+	if err := goose.Up(db, "migrations"); err != nil {
 		return fmt.Errorf("failed to apply migrations: %w", err)
 	}
 

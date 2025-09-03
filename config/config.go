@@ -16,6 +16,7 @@ type Configuration struct {
 	ShuttingDowntime int    `env:"SHUTTING_DOWN_TIME" envdefault:"5"      validate:"required,min=5,max=600"`
 	JWTSecret        string `env:"JWT_SECRET"       validate:"required"`
 	BotURL           string `env:"BOT_URL"           envdefault:"http://localhost:8081" validate:"required"`
+	MigrationRun     bool   `env:"RUN_MIGRATIONS" validate:"required"`
 }
 
 func Load() (*Configuration, error) {
