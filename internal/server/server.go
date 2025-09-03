@@ -39,6 +39,9 @@ func New(logg *slog.Logger, cfg *config.Configuration, db repository.Repository,
 	serverEcho.POST("/login", handler.LoginUsers)
 	serverEcho.POST("/refresh", handler.RefreshUsers)
 
+	serverEcho.POST("/2fa/bind", handler.BindTelegram)
+	serverEcho.POST("/2fa/verify", handler.Verify2FA)
+
 	protected := serverEcho.Group("")
 	protected.Use(middleware.JWTAuth(cfg))
 

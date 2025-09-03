@@ -5,8 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Kofandr/To-do_list/internal/domain/model"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"time"
 )
 
 func (postgres *PgxRepository) CreateUser(ctx context.Context, user *model.NewUser) (int, error) {
@@ -93,13 +95,13 @@ func (postgres *PgxRepository) UserExists(ctx context.Context, id int) (bool, er
 
 func (postgres *PgxRepository) GetUsersByName(ctx context.Context, username string) (*model.User, error) {
 	const query = `
-		SELECT user_id, username, password  
+		SELECT user_id, username, password, telegram_chat_id  
 		FROM users 
 		WHERE username = $1
 		`
 
 	var user model.User
-	err := postgres.db.QueryRow(ctx, query, username).Scan(&user.UserID, &user.Username, &user.Password)
+	err := postgres.db.QueryRow(ctx, query, username).Scan(&user.UserID, &user.Username, &user.Password, &user.TelegramChatID)
 
 	return &user, err
 }
@@ -206,4 +208,84 @@ func (postgres *PgxRepository) GetUserByTelegramUsername(ctx context.Context, tg
 	}
 
 	return &user, nil
+}
+
+func (postgres *PgxRepository) BindTelegramChat(ctx context.Context, chatID int64, linkCode string) error {
+	const query = `
+		UPDATE users
+		SET telegram_chat_id = $1, link_code = NULL
+		WHERE link_code = $2;
+	`
+
+	cmdTag, err := postgres.db.Exec(ctx, query, chatID, linkCode)
+	if err != nil {
+		return fmt.Errorf("BindTelegramChat exec failed: %w", err)
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		return pgx.ErrNoRows
+	}
+
+	return nil
+}
+
+func (postgres *PgxRepository) VerifyTelegramCode(ctx context.Context, userID int, code string) (bool, error) {
+	const query = `
+		SELECT telegram_code, code_expires_at
+		FROM users
+		WHERE user_id = $1;
+	`
+
+	var dbCode string
+	var expiresAt time.Time
+
+	err := postgres.db.QueryRow(ctx, query, userID).Scan(&dbCode, &expiresAt)
+	if err != nil {
+		return false, fmt.Errorf("VerifyTelegramCode query failed: %w", err)
+	}
+
+	if dbCode != code || time.Now().After(expiresAt) {
+		return false, nil
+	}
+
+	const deleteQuery = `
+		UPDATE users SET telegram_code = NULL WHERE user_id = $1;
+	`
+
+	if _, err := postgres.db.Exec(ctx, deleteQuery, userID); err != nil {
+		return false, fmt.Errorf("VerifyTelegramCode cleanup failed: %w", err)
+	}
+
+	return true, nil
+}
+
+func (postgres *PgxRepository) AssignLinkCode(ctx context.Context, userID int) (string, error) {
+	const query = `
+		UPDATE users SET link_code = $1 WHERE user_id = $2;
+	`
+
+	linkCode := uuid.NewString()
+
+	_, err := postgres.db.Exec(ctx, query, linkCode, userID)
+	if err != nil {
+		return "", fmt.Errorf("AssignLinkCode exec failed: %w", err)
+	}
+
+	return linkCode, nil
+}
+
+func (postgres *PgxRepository) SetTelegramCode(ctx context.Context, userID int, code string) error {
+	const query = `
+		UPDATE users
+		SET telegram_code = $1,
+		    code_expires_at = now() + interval '5 minutes'
+		WHERE user_id = $2;
+	`
+
+	_, err := postgres.db.Exec(ctx, query, code, userID)
+	if err != nil {
+		return fmt.Errorf("SetTelegramCode exec failed: %w", err)
+	}
+
+	return nil
 }

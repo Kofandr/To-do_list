@@ -60,7 +60,7 @@ func main() {
 
 	db := postgres.New(pool)
 
-	service := auth.New(db, cfg)
+	service := auth.New(db, cfg, cfg.BotURL)
 
 	mainServer := server.New(logg, cfg, db, service)
 

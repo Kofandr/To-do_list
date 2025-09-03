@@ -29,5 +29,9 @@ type UsersRepository interface {
 	GetTwoFACode(ctx context.Context, userID int, forLogin bool) (*model.TwoFACode, error)
 	DeleteTwoFACode(ctx context.Context, userID int, forLogin bool) error
 	UpdateTelegramConfirmed(ctx context.Context, userID int, confirmed bool) error
-	GetUserByTelegramUsername(ctx context.Context, tgUsername string) (*model.User, error) //
+	GetUserByTelegramUsername(ctx context.Context, tgUsername string) (*model.User, error)
+	BindTelegramChat(ctx context.Context, chatID int64, linkCode string) error
+	VerifyTelegramCode(ctx context.Context, userID int, code string) (bool, error)
+	AssignLinkCode(ctx context.Context, userID int) (string, error)
+	SetTelegramCode(ctx context.Context, userID int, code string) error
 }

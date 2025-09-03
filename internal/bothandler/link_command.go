@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"github.com/Kofandr/To-do_list/internal/domain/model"
 	"github.com/Kofandr/To-do_list/internal/logger"
-	"github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log/slog"
 	"net/http"
 	"strings"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 func HandleLinkCommand(logg *slog.Logger, bot *tgbotapi.BotAPI, message *tgbotapi.Message, apiURL string) {
@@ -46,6 +47,7 @@ func HandleLinkCommand(logg *slog.Logger, bot *tgbotapi.BotAPI, message *tgbotap
 
 	if resp.StatusCode != http.StatusOK {
 		logg.Warn("invalid link code")
+
 		_, _ = bot.Send(tgbotapi.NewMessage(message.Chat.ID, "Invalid or expired code"))
 		return
 	}

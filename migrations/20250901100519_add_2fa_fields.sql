@@ -8,7 +8,7 @@ CREATE TABLE twofa_codes (
                              user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
                              code_hash VARCHAR(255) NOT NULL,
                              expires_at TIMESTAMP NOT NULL,
-                             for_login BOOLEAN DEFAULT FALSE,
+                             for_login BOOLEAN DEFAULT FALSE
 );
 
 CREATE INDEX idx_twofa_user_id ON twofa_codes(user_id);

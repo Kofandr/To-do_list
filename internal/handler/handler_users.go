@@ -7,6 +7,7 @@ import (
 	"github.com/Kofandr/To-do_list/internal/domain/model"
 	"github.com/Kofandr/To-do_list/internal/logger"
 	"github.com/Kofandr/To-do_list/internal/repository/postgres"
+	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -130,7 +131,7 @@ func (handler *Handler) LoginUsers(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, errResp)
 	}
 
-	tokens, err := handler.service.Login(&user, ctx)
+	result, err := handler.service.Login(&user, ctx, logg)
 	if err != nil {
 		errResp := map[string]string{"err": "Server error"}
 
@@ -139,7 +140,7 @@ func (handler *Handler) LoginUsers(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, errResp)
 	}
 
-	return c.JSON(http.StatusCreated, tokens)
+	return c.JSON(http.StatusOK, result)
 }
 
 func (handler *Handler) RefreshUsers(c echo.Context) error {
@@ -179,32 +180,70 @@ func (handler *Handler) BindTelegram(c echo.Context) error {
 	ctx := c.Request().Context()
 	logg := appctx.LoggerFromContext(ctx)
 
-	var bindRequest struct {
-		ChatID int64  `json:"chat_id"`
-		Code   string `json:"code"`
-	}
-
-	if err := c.Bind(&bindRequest); err != nil {
+	var req model.TelegramCodeChatID
+	if err := c.Bind(&req); err != nil {
 		errResp := map[string]string{"err": "Invalid JSON format"}
+
 		logg.Error("Invalid JSON received", logger.ErrAttr(err))
+
 		return c.JSON(http.StatusBadRequest, errResp)
 	}
 
-	// Здесь реализуйте логику проверки кода и привязки Telegram
-	// Это может включать проверку кода, сохранение chat_id в базе данных и т.д.
+	if err := c.Validate(req); err != nil {
+		errResp := map[string]string{"err": "Invalid request data"}
 
-	// Примерная реализация:
-	userID, err := handler.db.GetUserIDByTelegramCode(bindRequest.Code)
-	if err != nil {
-		logg.Error("Invalid telegram code", logger.ErrAttr(err))
-		return c.JSON(http.StatusBadRequest, map[string]string{"err": "Invalid code"})
+		logg.Error("Validation failed", logger.ErrAttr(err))
+
+		return c.JSON(http.StatusBadRequest, errResp)
 	}
 
-	err = handler.db.UpdateUserTelegramChatID(userID, bindRequest.ChatID)
+	err := handler.db.BindTelegramChat(ctx, req.ChatID, req.Code)
 	if err != nil {
-		logg.Error("Failed to update telegram chat ID", logger.ErrAttr(err))
+		if errors.Is(err, pgx.ErrNoRows) {
+			logg.Warn("not found", logger.ErrAttr(err))
+
+			return c.JSON(http.StatusNotFound, map[string]string{"err": "not found"})
+		}
+
+		logg.Error("Database error", logger.ErrAttr(err))
+
 		return c.JSON(http.StatusInternalServerError, map[string]string{"err": "Server error"})
 	}
 
-	return c.JSON(http.StatusOK, map[string]string{"message": "Telegram account linked successfully"})
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"telegram bound": "telegram bound",
+	})
+}
+
+func (handler *Handler) Verify2FA(c echo.Context) error {
+	ctx := c.Request().Context()
+	logg := appctx.LoggerFromContext(ctx)
+
+	var req model.Verify2FARequest
+	if err := c.Bind(&req); err != nil {
+		errResp := map[string]string{"err": "Invalid JSON format"}
+
+		logg.Error("Invalid JSON received", logger.ErrAttr(err))
+
+		return c.JSON(http.StatusBadRequest, errResp)
+	}
+
+	if err := c.Validate(req); err != nil {
+		errResp := map[string]string{"err": "Invalid request data"}
+
+		logg.Error("Validation failed", logger.ErrAttr(err))
+
+		return c.JSON(http.StatusBadRequest, errResp)
+	}
+
+	tokens, err := handler.service.Verify2FA(&req, ctx, logg)
+	if err != nil {
+		errResp := map[string]string{"err": "Server error"}
+
+		logg.Error("An error occurred while accessing the database", logger.ErrAttr(err))
+
+		return c.JSON(http.StatusInternalServerError, errResp)
+	}
+
+	return c.JSON(http.StatusCreated, tokens)
 }

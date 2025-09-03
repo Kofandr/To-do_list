@@ -7,14 +7,15 @@ import (
 	"github.com/Kofandr/To-do_list/internal/bothandler"
 	"github.com/Kofandr/To-do_list/internal/botrunner"
 	"github.com/Kofandr/To-do_list/internal/logger"
-	"github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/labstack/echo/v4"
 	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/labstack/echo/v4"
 )
 
 func main() {
@@ -45,7 +46,6 @@ func main() {
 
 	errCh := make(chan error, 2)
 
-	// Polling
 	pollCtx, pollCancel := context.WithCancel(context.Background())
 	defer pollCancel()
 	go func() {
@@ -54,7 +54,6 @@ func main() {
 		}
 	}()
 
-	// HTTP
 	go func() {
 		logg.Info("starting bot HTTP server", "port", cfg.BotPort)
 		if err := e.Start(":" + cfg.BotPort); err != nil && !errors.Is(err, http.ErrServerClosed) {
