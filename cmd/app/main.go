@@ -15,6 +15,7 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"syscall"
@@ -66,6 +67,16 @@ func main() {
 			errCh <- err
 		}
 	}()
+
+	if cfg.EnablePprof {
+		go func() {
+			pprofAddr := "0.0.0.0:6060" // Измените localhost на 0.0.0.0
+			logg.Info("Starting pprof server", "addr", pprofAddr)
+			if err := http.ListenAndServe(pprofAddr, nil); err != nil {
+				logg.Error("pprof server failed", logger.ErrAttr(err))
+			}
+		}()
+	}
 
 	var startErr error
 
