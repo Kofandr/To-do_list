@@ -8,7 +8,7 @@ run:
 	@env $$(grep -v '^#' .env | xargs) go run $(MAIN_PATH)
 
 start: lint run
-	go run $(MAIN_PATH)
+	go run cmd/app/main.go --migrate
 
 lint:
 	golangci-lint run

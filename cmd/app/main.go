@@ -9,15 +9,19 @@ import (
 	"github.com/Kofandr/To-do_list/internal/logger"
 	"github.com/Kofandr/To-do_list/internal/repository/postgres"
 	"github.com/Kofandr/To-do_list/internal/server"
+	"github.com/Kofandr/To-do_list/internal/service/auth"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pressly/goose/v3"
 	"log"
 	"log/slog"
 	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	_ "github.com/jackc/pgx/v5/stdlib" // Добавьте этот импорт
 )
 
 func main() {
@@ -43,14 +47,19 @@ func main() {
 
 	errCh := make(chan error, 2)
 
-	if err := applyMigrations(logg, cfg.DatabaseURL); err != nil {
-		logg.Error("Database migrations failed", logger.ErrAttr(err))
-		errCh <- err
+	if cfg.MigrationRun == true {
+		logg.Info("Migrations run")
+		if err := applyMigrations(logg, cfg.DatabaseURL); err != nil {
+			logg.Error("Database migrations failed", logger.ErrAttr(err))
+			errCh <- err
+		}
 	}
 
 	db := postgres.New(pool)
 
-	mainServer := server.New(logg, cfg, db)
+	service := auth.New(db, cfg, cfg.BotURL)
+
+	mainServer := server.New(logg, cfg, db, service)
 
 	go func() {
 		if err := mainServer.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -58,6 +67,16 @@ func main() {
 			errCh <- err
 		}
 	}()
+
+	if cfg.EnablePprof {
+		go func() {
+			pprofAddr := "0.0.0.0:6060" // Измените localhost на 0.0.0.0
+			logg.Info("Starting pprof server", "addr", pprofAddr)
+			if err := http.ListenAndServe(pprofAddr, nil); err != nil {
+				logg.Error("pprof server failed", logger.ErrAttr(err))
+			}
+		}()
+	}
 
 	var startErr error
 
@@ -69,7 +88,7 @@ func main() {
 		logg.Error("Server error", logger.ErrAttr(err))
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(cfg.ShuttingDowntime)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	logg.Info("Shutting down...")
@@ -92,7 +111,7 @@ func applyMigrations(logg *slog.Logger, dsn string) error {
 	}
 	defer db.Close()
 
-	if err := goose.Up(db, "./migrations"); err != nil {
+	if err := goose.Up(db, "migrations"); err != nil {
 		return fmt.Errorf("failed to apply migrations: %w", err)
 	}
 
