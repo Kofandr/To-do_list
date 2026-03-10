@@ -1,10 +1,10 @@
-To-Do List с Telegram 2FA
+  To-Do List с Telegram 2FA
 REST API сервис управления задачами с JWT-аутентификацией и двухфакторной верификацией через Telegram-бота.
 
-Стек
+  Стек
 Go 1.24 · Echo · PostgreSQL · Docker · Docker Compose · Goose · JWT · Telegram Bot API · golangci-lint
 
-Возможности:
+  Возможности:
 
 Регистрация и авторизация пользователей с хешированием паролей (bcrypt)
 JWT-аутентификация (access + refresh токены)
