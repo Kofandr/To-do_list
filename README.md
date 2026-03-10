@@ -24,7 +24,7 @@ Go 1.24 · Echo · PostgreSQL · Docker · Docker Compose · Goose · JWT · Tel
 Как работает авторизация  
 1. POST /register        - регистрация  
 2. POST /login           - если Telegram не привязан → получаешь link_code  
-3. /link <code>          - отправляешь боту, Telegram привязывается к аккаунту  
+3. /link code            - отправляешь боту, Telegram привязывается к аккаунту  
 4. POST /login           - если Telegram привязан → бот присылает 6-значный код  
 5. POST /2fa/verify      - отправляешь код → получаешь JWT токены  
-6. Все запросы к /tasks  - Authorization: Bearer <access_token>  
+6. Все запросы к /tasks  - Authorization: Bearer access_token 
